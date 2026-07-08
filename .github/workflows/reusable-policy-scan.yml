@@ -1,0 +1,88 @@
+name: Reusable · Policy Scan
+
+# Workflow REUTILIZÁVEL, chamado por outros repositórios no evento pull_request
+# para validar o IaC ANTES do merge (gate preventivo). Consome as regras deste
+# repositório central (checkov/ e guard-rules/).
+#
+# Uso no repo consumidor (.github/workflows/policy-gate.yml):
+#   name: Policy Gate
+#   on: pull_request
+#   jobs:
+#     policy:
+#       uses: <ORG>/policy-as-code/.github/workflows/reusable-policy-scan.yml@main
+#       with:
+#         terraform_dir: "."
+#         cloudformation_dir: "cfn"      # opcional; vazio = pula CloudFormation
+#         policy_ref: "main"
+
+on:
+  workflow_call:
+    inputs:
+      terraform_dir:
+        description: "Diretório com código Terraform a validar (vazio pula Checkov)."
+        type: string
+        default: "."
+      cloudformation_dir:
+        description: "Diretório com templates CloudFormation (vazio pula cfn-guard)."
+        type: string
+        default: ""
+      policy_ref:
+        description: "Ref (branch/tag) do repositório de políticas a usar."
+        type: string
+        default: "main"
+      policy_repo:
+        description: "owner/repo do repositório central de políticas."
+        type: string
+        default: "dennisasilva/policy-as-code"
+    secrets:
+      policy_repo_token:
+        description: "Token (PAT/GitHub App) com leitura no repo central. Necessário APENAS se ele for privado e estiver em outro repo/owner."
+        required: false
+
+jobs:
+  policy-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório consumidor
+        uses: actions/checkout@v4
+
+      - name: Checkout das políticas (repo central)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.policy_repo }}
+          ref: ${{ inputs.policy_ref }}
+          path: .policy-as-code
+          # Se o repo central for privado em outro owner, o GITHUB_TOKEN padrao
+          # nao tem acesso: passe um PAT/GitHub App em secrets.policy_repo_token.
+          token: ${{ secrets.policy_repo_token || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Checkov
+        if: inputs.terraform_dir != ''
+        run: pip install checkov
+
+      - name: Checkov scan (regras custom)
+        if: inputs.terraform_dir != ''
+        run: |
+          checkov -d "${{ inputs.terraform_dir }}" \
+            --external-checks-dir .policy-as-code/checkov \
+            --check CKV2_PAC_1 \
+            --compact
+
+      - name: Install cfn-guard
+        if: inputs.cloudformation_dir != ''
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
+          echo "$HOME/.guard/bin" >> "$GITHUB_PATH"
+
+      - name: cfn-guard scan
+        if: inputs.cloudformation_dir != ''
+        run: |
+          cfn-guard validate \
+            -r .policy-as-code/guard-rules \
+            -d "${{ inputs.cloudformation_dir }}" \
+            --show-summary fail

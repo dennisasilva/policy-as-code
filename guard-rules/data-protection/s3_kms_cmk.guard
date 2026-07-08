@@ -1,0 +1,32 @@
+#
+# AWS CloudFormation Guard rule
+# Intent: every S3 bucket must be encrypted with a customer-managed KMS key (CMK).
+#   - BucketEncryption must exist
+#   - SSEAlgorithm must be 'aws:kms'
+#   - KMSMasterKeyID must be provided
+#
+# Run:  cfn-guard validate -r guard-rules/s3_kms_cmk.guard -d <template.yaml>
+#
+
+let s3_buckets = Resources.*[ Type == 'AWS::S3::Bucket' ]
+
+rule s3_must_use_kms_cmk when %s3_buckets !empty {
+  %s3_buckets {
+    Properties.BucketEncryption exists
+    <<
+      Violation: S3 bucket must define BucketEncryption with a customer-managed KMS key (CMK).
+    >>
+
+    Properties.BucketEncryption.ServerSideEncryptionConfiguration[*].ServerSideEncryptionByDefault {
+      SSEAlgorithm == 'aws:kms'
+      <<
+        Violation: SSEAlgorithm must be 'aws:kms' (SSE-S3 / AES256 is not allowed).
+      >>
+
+      KMSMasterKeyID exists
+      <<
+        Violation: KMSMasterKeyID (a customer-managed KMS key) must be provided.
+      >>
+    }
+  }
+}

@@ -1,0 +1,31 @@
+name: Policy-as-Code · self-test
+
+# Valida as PRÓPRIAS regras deste repositório: os exemplos "compliant" devem
+# passar e os "noncompliant" devem ser detectados. Roda em cada Pull Request.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Install cfn-guard
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
+          echo "$HOME/.guard/bin" >> "$GITHUB_PATH"
+
+      - name: Run policy self-tests
+        run: bash scripts/test-policies.sh

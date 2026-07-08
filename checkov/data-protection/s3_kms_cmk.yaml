@@ -1,0 +1,26 @@
+# Custom Checkov policy (YAML graph check)
+# Intent: an S3 bucket must be encrypted with a customer-managed KMS key (CMK).
+#   - SSEAlgorithm must be "aws:kms" (not AES256 / SSE-S3)
+#   - a KMSMasterKeyID must be provided (a CMK ARN / key id / alias reference)
+#
+# NOTE: to also reject the AWS-managed key (alias/aws/s3), add a
+# `not_starting_with: "alias/aws/"` condition on kms_master_key_id.
+metadata:
+  name: "S3 bucket must be encrypted with a customer-managed KMS key (CMK)"
+  id: "CKV2_PAC_1"
+  category: "ENCRYPTION"
+scope:
+  provider: "aws"
+definition:
+  and:
+    - cond_type: "attribute"
+      resource_types:
+        - "aws_s3_bucket_server_side_encryption_configuration"
+      attribute: "rule.apply_server_side_encryption_by_default.sse_algorithm"
+      operator: "equals"
+      value: "aws:kms"
+    - cond_type: "attribute"
+      resource_types:
+        - "aws_s3_bucket_server_side_encryption_configuration"
+      attribute: "rule.apply_server_side_encryption_by_default.kms_master_key_id"
+      operator: "exists"

@@ -1,0 +1,25 @@
+# Terraform (nunca versionar estado/segredos)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Segredos / credenciais
+*.pem
+*.key
+.env
+*.env
+
+# Python / ferramentas
+__pycache__/
+*.py[cod]
+.venv/
+.checkov/
+
+# macOS / editores
+.DS_Store
+._*
+.vscode/
+.idea/
