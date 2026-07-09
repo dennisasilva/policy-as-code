@@ -23,36 +23,94 @@ O repositório central concentra as regras; os repositórios de aplicação **co
 
 ---
 
+## Como as regras são avaliadas (fluxo)
+
+O gate roda no **Pull Request** do repositório consumidor e decide, por **análise
+estática do IaC** (antes do `terraform apply`), se o código pode ser mergeado.
+
+```
+PR aberto no repo consumidor
+      │  (evento pull_request)
+      ▼
+policy-gate.yml  ──uses──▶  reusable-policy-scan.yml (ESTE repo central)
+      │
+      ├─ 1. Checkout do IaC do PR  +  checkout deste repo de regras
+      │
+      ├─ 2. MONTA a lista de regras a aplicar (só os IDs; nada roda ainda):
+      │
+      │        APLICADO = ( checks.txt de cada épico
+      │                      [ + catalog.txt de cada épico, se use_full_catalog=true ] )
+      │                    − exclusions.txt
+      │
+      ├─ 3. EXECUTA o scanner:
+      │        checkov -d <tf_dir> \
+      │                --external-checks-dir checkov \   # carrega built-in + custom (YAML)
+      │                --check <APLICADO> \              # aplica só os IDs selecionados
+      │                --skip-path <linhas de skip-paths.txt>
+      │
+      │        • faz o parse do HCL do PR e monta um grafo de recursos
+      │        • cada regra avalia SÓ os recursos do seu "scope" (ex.: aws_eks_cluster)
+      │        • cada regra devolve PASS / FAIL por recurso
+      │
+      └─ 4. Qualquer FAIL → exit 1 → o status check "policy / policy-scan" fica VERMELHO
+             (com branch protection, isso BLOQUEIA o merge)
+```
+
+### O que decide se uma regra roda e se passa
+- **Escopo (o quê é avaliado):** a regra só executa se o PR contém um recurso do
+  **tipo que ela observa**. Por isso listar regras de serviços não usados **não**
+  gera falso positivo — elas simplesmente não avaliam nada.
+- **Condições (passa ou falha):** cada regra tem condições sobre atributos do
+  recurso. Exemplo da regra custom `CKV2_PAC_1`: sobre
+  `aws_s3_bucket_server_side_encryption_configuration`, exige
+  `sse_algorithm == "aws:kms"` **E** `kms_master_key_id` presente. Se qualquer
+  condição falhar → FAIL.
+
+### Inclusão e exclusão (governança)
+| Arquivo | Papel |
+|---|---|
+| `checkov/<épico>/checks.txt` | **Inclusão curada** — regras efetivamente aplicadas (built-in + custom) |
+| `checkov/<épico>/catalog.txt` · `CATALOG.md` | **Catálogo** de todas as built-in do épico (referência) |
+| `checkov/exclusions.txt` | **Exclusão de checks** por ID (com justificativa) |
+| `checkov/skip-paths.txt` | **Exclusão de caminhos** (`--skip-path`, ex.: `.*/examples/.*`) |
+| input `use_full_catalog` | Liga o **modo catálogo completo** (aplica tudo, não só o curado) |
+
+Exceção pontual no consumidor: `#checkov:skip=CKV_AWS_XX:motivo` direto no recurso.
+
+> Detalhes e como promover/excluir regras: [`checkov/README.md`](checkov/README.md)
+> e o `README.md` de cada épico em `checkov/<épico>/`.
+
+---
+
 ## Estrutura
 
 ```
 policy-as-code/
 ├── checkov/                       # regras Checkov (Terraform), organizadas por épico
-│   ├── iam/
-│   ├── detective-controls/
-│   ├── infra-security/
-│   ├── data-protection/
-│   │   └── s3_kms_cmk.yaml        #  [id: CKV2_PAC_1] S3 exige KMS CMK
-│   └── incident-response/
+│   ├── <épico>/                   # iam | detective-controls | infra-security | data-protection | incident-response | general
+│   │   ├── checks.txt             #   regras APLICADAS pelo gate (curadas) — built-in + custom
+│   │   ├── catalog.txt            #   catálogo (só IDs) de todas as built-in do épico
+│   │   ├── CATALOG.md             #   catálogo documentado (ID | recurso | descrição)
+│   │   ├── README.md              #   o que cada regra curada valida e o esperado
+│   │   └── *.yaml                 #   regras CUSTOM (ex.: data-protection/s3_kms_cmk.yaml = CKV2_PAC_1)
+│   ├── exclusions.txt             # IDs a IGNORAR globalmente (subtraídos do conjunto)
+│   ├── skip-paths.txt             # caminhos a ignorar no scan (--skip-path)
+│   └── README.md                  # mecânica de inclusão/exclusão e catálogo
 ├── guard-rules/                   # regras cfn-guard (CloudFormation), por épico
-│   ├── iam/
-│   ├── detective-controls/
-│   ├── infra-security/
-│   ├── data-protection/
-│   │   └── s3_kms_cmk.guard
-│   └── incident-response/
+│   └── data-protection/s3_kms_cmk.guard
 ├── examples/
 │   ├── terraform/{compliant,noncompliant}/main.tf
 │   └── cloudformation/{compliant,noncompliant}.yaml
 ├── scripts/
 │   ├── test-policies.sh           # auto-teste (compliant passa / noncompliant falha)
-│   └── run-checks.sh              # roda as checagens em diretórios informados
+│   ├── run-checks.sh              # roda as checagens em diretórios informados
+│   └── generate-catalog.sh        # (re)gera catalog.txt e CATALOG.md por épico
 └── .github/workflows/
     ├── policy-as-code.yml         # auto-teste das regras (no PR deste repo)
     └── reusable-policy-scan.yml   # workflow REUTILIZÁVEL p/ repos consumidores
 ```
 
-As regras são organizadas por **épico de segurança**: `iam`, `detective-controls`, `infra-security`, `data-protection`, `incident-response`. As ferramentas recursam nos subdiretórios automaticamente — `checkov --external-checks-dir checkov` carrega todas as regras dos épicos, e `cfn-guard validate -r guard-rules` idem.
+As regras são organizadas por **épico de segurança**: `iam`, `detective-controls`, `infra-security`, `data-protection`, `incident-response` (+ `general` para não classificados). O gate agrega automaticamente os `checks.txt` de todos os épicos (ver seção **Como as regras são avaliadas**).
 
 ---
 
@@ -99,7 +157,7 @@ scripts/run-checks.sh ./infra ./cfn
 
 ## A regra de exemplo (S3 exige KMS CMK)
 
-- **Checkov** (`checkov/s3_kms_cmk.yaml`, id `CKV2_PAC_1`): no recurso `aws_s3_bucket_server_side_encryption_configuration`, exige `sse_algorithm = "aws:kms"` e `kms_master_key_id` presente.
+- **Checkov** (`checkov/data-protection/s3_kms_cmk.yaml`, id `CKV2_PAC_1`): no recurso `aws_s3_bucket_server_side_encryption_configuration`, exige `sse_algorithm = "aws:kms"` e `kms_master_key_id` presente.
   Para também rejeitar a chave gerenciada pela AWS (`alias/aws/s3`), acrescente uma condição `not_starting_with: "alias/aws/"`.
 - **cfn-guard** (`guard-rules/s3_kms_cmk.guard`): em `AWS::S3::Bucket`, exige `BucketEncryption` com `SSEAlgorithm == 'aws:kms'` e `KMSMasterKeyID` presente.
 
