@@ -17,3 +17,10 @@ internet) e endpoints de plano de controle públicos.
 - Nunca expor **SSH (22)** ou **RDP (3389)** para `0.0.0.0/0` — use bastion, SSM ou CIDRs restritos.
 - **EKS**: manter o endpoint **privado** (`endpoint_public_access = false`); se precisar de público, restringir `public_access_cidrs`.
 - Documentar todas as regras de security group (`description`).
+
+## Catálogo completo de regras built-in deste épico
+
+As regras acima são as **curadas** (aplicadas pelo gate via `checks.txt`). O Checkov
+oferece muitas outras built-in para este domínio — a lista completa (ID, recurso e
+descrição) está em **[CATALOG.md](./CATALOG.md)**, gerada por `scripts/generate-catalog.sh`.
+Para passar a exigir uma delas, adicione o ID ao `checks.txt` deste diretório.

@@ -17,3 +17,10 @@ componentes usados durante a resposta a incidentes.
 - Canais de notificação (SNS/SQS) **criptografados**.
 - **Backups** cifrados com CMK.
 - Alarmes com **ações habilitadas** e log groups com **retenção** explícita (evita logs efêmeros).
+
+## Catálogo completo de regras built-in deste épico
+
+As regras acima são as **curadas** (aplicadas pelo gate via `checks.txt`). O Checkov
+oferece muitas outras built-in para este domínio — a lista completa (ID, recurso e
+descrição) está em **[CATALOG.md](./CATALOG.md)**, gerada por `scripts/generate-catalog.sh`.
+Para passar a exigir uma delas, adicione o ID ao `checks.txt` deste diretório.

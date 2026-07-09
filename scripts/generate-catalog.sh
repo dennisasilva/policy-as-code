@@ -33,6 +33,7 @@ for e in $EPICS; do
 done
 
 # Categoriza cada check (Terraform + recurso aws*) em um épico (primeira regra que casa).
+# Emite linhas "epic|id|entity|desc" para pós-processar (catalog.txt + CATALOG.md).
 awk -F'|' -v dir="$CKV_DIR" '
 function trim(s){ gsub(/^[ \t]+|[ \t]+$/,"",s); return s }
 {
@@ -55,7 +56,8 @@ function trim(s){ gsub(/^[ \t]+|[ \t]+$/,"",s); return s }
   else
     epic="general"
 
-  print id >> (dir "/" epic "/.catalog.tmp")
+  gsub(/\|/,"/",desc)  # evita quebrar a tabela markdown
+  print epic "|" id "|" entity "|" desc >> (dir "/" epic "/.catalog.tmp")
 }
 ' "$TMP"
 
@@ -63,15 +65,34 @@ echo "Catálogo gerado por épico:"
 for e in $EPICS; do
   f="$CKV_DIR/$e/.catalog.tmp"
   out="$CKV_DIR/$e/catalog.txt"
+  md="$CKV_DIR/$e/CATALOG.md"
+
+  # catalog.txt: apenas IDs (consumido pelo gate), único e ordenado.
   {
     echo "# Épico: $e — CATÁLOGO de checks built-in do Checkov (AWS/Terraform)."
     echo "# Gerado por scripts/generate-catalog.sh (a partir de 'checkov --list')."
     echo "# Referência do que EXISTE por épico. A lista APLICADA pelo gate é checks.txt."
     echo "# Para exigir uma regra: mova/adicione o ID em checks.txt (ou use modo catálogo)."
-    if [ -f "$f" ]; then sort -u "$f"; fi
+    if [ -f "$f" ]; then cut -d'|' -f2 "$f" | sort -u; fi
   } > "$out"
+
+  # CATALOG.md: tabela legível (ID | recurso | descrição), única por ID.
+  cnt=$([ -f "$out" ] && grep -cvE '^[[:space:]]*#|^[[:space:]]*$' "$out" || echo 0)
+  {
+    echo "# Catálogo built-in — épico \`$e\`"
+    echo ""
+    echo "Regras built-in do Checkov (AWS/Terraform) classificadas neste épico: **$cnt**."
+    echo "Gerado automaticamente por \`scripts/generate-catalog.sh\`. A lista **aplicada**"
+    echo "pelo gate é \`checks.txt\` (curada); este catálogo é referência."
+    echo ""
+    echo "| Check ID | Recurso | O que valida |"
+    echo "|---|---|---|"
+    if [ -f "$f" ]; then
+      sort -t'|' -k2,2 "$f" | awk -F'|' '!seen[$2]++ { printf "| %s | \`%s\` | %s |\n", $2, $3, $4 }'
+    fi
+  } > "$md"
+
   rm -f "$f"
-  cnt=$(grep -cvE '^[[:space:]]*#|^[[:space:]]*$' "$out" || true)
   printf "  %-20s %s checks\n" "$e" "$cnt"
 done
 

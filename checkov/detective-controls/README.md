@@ -17,3 +17,10 @@ de ameaças) para permitir investigação e resposta.
 - CloudTrail **multi-região**, **cifrado com CMK** e com **validação de integridade**.
 - AWS Config cobrindo todas as regiões.
 - GuardDuty ativo para detecção de ameaças.
+
+## Catálogo completo de regras built-in deste épico
+
+As regras acima são as **curadas** (aplicadas pelo gate via `checks.txt`). O Checkov
+oferece muitas outras built-in para este domínio — a lista completa (ID, recurso e
+descrição) está em **[CATALOG.md](./CATALOG.md)**, gerada por `scripts/generate-catalog.sh`.
+Para passar a exigir uma delas, adicione o ID ao `checks.txt` deste diretório.

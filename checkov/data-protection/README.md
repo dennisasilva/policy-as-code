@@ -19,3 +19,10 @@ de dados em repouso nos principais serviços de armazenamento/segredos.
 - **Sempre** criptografar dados em repouso; onde houver requisito de governança, usar **CMK** (não a chave gerenciada pela AWS).
 - Nunca expor bancos (`publicly_accessible = false`).
 - Políticas de chave KMS sem `Principal = "*"` (evita uso indevido da chave).
+
+## Catálogo completo de regras built-in deste épico
+
+As regras acima são as **curadas** (aplicadas pelo gate via `checks.txt`). O Checkov
+oferece muitas outras built-in para este domínio — a lista completa (ID, recurso e
+descrição) está em **[CATALOG.md](./CATALOG.md)**, gerada por `scripts/generate-catalog.sh`.
+Para passar a exigir uma delas, adicione o ID ao `checks.txt` deste diretório.
