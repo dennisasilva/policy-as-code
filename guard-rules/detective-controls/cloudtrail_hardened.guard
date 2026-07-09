@@ -1,0 +1,28 @@
+#
+# AWS CloudFormation Guard rule — Detective Controls
+# Intenção: CloudTrail deve ser cifrado com KMS, ter validação de integridade e ser multi-região.
+# Equivalente aos checks Checkov CKV_AWS_35 / CKV_AWS_36 / CKV_AWS_67.
+#
+# Run: cfn-guard validate -r guard-rules -d <template.yaml>
+#
+
+let trails = Resources.*[ Type == 'AWS::CloudTrail::Trail' ]
+
+rule cloudtrail_hardened when %trails !empty {
+  %trails {
+    Properties.KMSKeyId exists
+    <<
+      Violation: CloudTrail deve definir KMSKeyId (logs cifrados com KMS CMK).
+    >>
+
+    Properties.EnableLogFileValidation == true
+    <<
+      Violation: CloudTrail deve ter EnableLogFileValidation = true.
+    >>
+
+    Properties.IsMultiRegionTrail == true
+    <<
+      Violation: CloudTrail deve ter IsMultiRegionTrail = true.
+    >>
+  }
+}

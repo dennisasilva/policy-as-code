@@ -1,0 +1,23 @@
+#
+# AWS CloudFormation Guard rule — Data Protection
+# Intenção: instâncias RDS devem ter StorageEncrypted = true e não ser públicas.
+# Equivalente aos checks Checkov CKV_AWS_16 / CKV_AWS_17.
+#
+# Run: cfn-guard validate -r guard-rules -d <template.yaml>
+#
+
+let db_instances = Resources.*[ Type == 'AWS::RDS::DBInstance' ]
+
+rule rds_encrypted_and_private when %db_instances !empty {
+  %db_instances {
+    Properties.StorageEncrypted == true
+    <<
+      Violation: RDS DBInstance deve ter StorageEncrypted = true.
+    >>
+
+    Properties.PubliclyAccessible == false
+    <<
+      Violation: RDS DBInstance nao pode ser PubliclyAccessible.
+    >>
+  }
+}

@@ -1,0 +1,25 @@
+#
+# AWS CloudFormation Guard rule — IAM
+# Intenção: políticas IAM não podem conceder Action '*' com Resource '*' (admin total).
+# Equivalente ao check Checkov CKV_AWS_1.
+#
+# Run: cfn-guard validate -r guard-rules -d <template.yaml>
+#
+
+let managed_policies = Resources.*[ Type == 'AWS::IAM::ManagedPolicy' ]
+
+rule iam_no_full_admin when %managed_policies !empty {
+  %managed_policies {
+    Properties.PolicyDocument.Statement[*] {
+      when Effect == 'Allow' {
+        # Reprova quando Action e Resource forem, ambos, o curinga '*'.
+        when Action == '*' {
+          Resource != '*'
+          <<
+            Violation: politica IAM nao pode conceder Action '*' com Resource '*' (admin total).
+          >>
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+#
+# AWS CloudFormation Guard rule — Incident Response
+# Intenção: tópicos SNS (canais de notificação) devem ser cifrados com KMS.
+# Equivalente ao check Checkov CKV_AWS_26.
+#
+# Run: cfn-guard validate -r guard-rules -d <template.yaml>
+#
+
+let sns_topics = Resources.*[ Type == 'AWS::SNS::Topic' ]
+
+rule sns_topic_encrypted when %sns_topics !empty {
+  %sns_topics {
+    Properties.KmsMasterKeyId exists
+    <<
+      Violation: topico SNS deve definir KmsMasterKeyId (criptografia com KMS).
+    >>
+  }
+}

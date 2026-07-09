@@ -80,6 +80,10 @@ Exceção pontual no consumidor: `#checkov:skip=CKV_AWS_XX:motivo` direto no rec
 > Detalhes e como promover/excluir regras: [`checkov/README.md`](checkov/README.md)
 > e o `README.md` de cada épico em `checkov/<épico>/`.
 
+> **CloudFormation (cfn-guard):** o fluxo é análogo, mas o cfn-guard **não tem
+> regras built-in** — usa regras próprias `.guard` (por épico) + o catálogo
+> gerenciado da **AWS Guard Rules Registry**. Veja [`guard-rules/README.md`](guard-rules/README.md).
+
 ---
 
 ## Estrutura
@@ -97,7 +101,9 @@ policy-as-code/
 │   ├── skip-paths.txt             # caminhos a ignorar no scan (--skip-path)
 │   └── README.md                  # mecânica de inclusão/exclusão e catálogo
 ├── guard-rules/                   # regras cfn-guard (CloudFormation), por épico
-│   └── data-protection/s3_kms_cmk.guard
+│   ├── <épico>/*.guard            #   regras (iam, data-protection, infra-security, detective-controls, incident-response)
+│   ├── <épico>/README.md          #   o que cada regra valida e o esperado
+│   └── README.md                  #   fluxo cfn-guard + catálogo (AWS Guard Rules Registry)
 ├── examples/
 │   ├── terraform/{compliant,noncompliant}/main.tf
 │   └── cloudformation/{compliant,noncompliant}.yaml

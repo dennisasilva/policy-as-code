@@ -1,0 +1,25 @@
+#
+# AWS CloudFormation Guard rule — Infra Security
+# Intenção: nenhum Security Group pode liberar SSH (22) ou RDP (3389) para 0.0.0.0/0.
+# Equivalente aos checks Checkov CKV_AWS_24 / CKV_AWS_25.
+#
+# Run: cfn-guard validate -r guard-rules -d <template.yaml>
+#
+
+let security_groups = Resources.*[ Type == 'AWS::EC2::SecurityGroup' ]
+
+rule sg_no_public_admin_ports when %security_groups !empty {
+  %security_groups {
+    Properties.SecurityGroupIngress[*] {
+      when CidrIp == '0.0.0.0/0' {
+        FromPort != 22
+        ToPort   != 22
+        FromPort != 3389
+        ToPort   != 3389
+        <<
+          Violation: Security Group nao pode liberar SSH (22) ou RDP (3389) para 0.0.0.0/0.
+        >>
+      }
+    }
+  }
+}
