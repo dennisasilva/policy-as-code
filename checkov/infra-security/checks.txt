@@ -1,0 +1,7 @@
+# Épico: Infra Security — checks aplicados pelo gate (agregados automaticamente).
+# Detalhe de cada regra: ver README.md deste diretório.
+CKV_AWS_24
+CKV_AWS_25
+CKV_AWS_23
+CKV_AWS_39
+CKV_AWS_38

@@ -1,0 +1,7 @@
+# Épico: Incident Response — checks aplicados pelo gate (agregados automaticamente).
+# Detalhe de cada regra: ver README.md deste diretório.
+CKV_AWS_166
+CKV_AWS_26
+CKV_AWS_27
+CKV_AWS_319
+CKV_AWS_66

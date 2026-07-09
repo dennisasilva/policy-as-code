@@ -1,0 +1,7 @@
+# Épico: Detective Controls — checks aplicados pelo gate (agregados automaticamente).
+# Detalhe de cada regra: ver README.md deste diretório.
+CKV_AWS_67
+CKV_AWS_35
+CKV_AWS_36
+CKV_AWS_121
+CKV_AWS_238
