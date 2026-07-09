@@ -34,6 +34,10 @@ on:
         description: "owner/repo do repositório central de políticas."
         type: string
         default: "dennisasilva/policy-as-code"
+      use_full_catalog:
+        description: "Se true, aplica TODAS as regras do catálogo (catalog.txt) além das curadas (checks.txt). Padrão: só as curadas."
+        type: boolean
+        default: false
     secrets:
       policy_repo_token:
         description: "Token (PAT/GitHub App) com leitura no repo central. Necessário APENAS se ele for privado e estiver em outro repo/owner."
@@ -64,27 +68,56 @@ jobs:
         if: inputs.terraform_dir != ''
         run: pip install checkov
 
-      - name: Checkov scan (todas as regras dos épicos)
+      - name: Checkov scan (inclusão/exclusão por diretório)
         if: inputs.terraform_dir != ''
+        env:
+          USE_FULL_CATALOG: ${{ inputs.use_full_catalog }}
         run: |
-          # Agrega TODOS os IDs de check declarados nos checks.txt de cada épico
-          # (checkov/<epico>/checks.txt). Assim o gate valida o conjunto completo
-          # de regras vinculadas aos diretórios — built-in + custom (ex.: CKV2_PAC_1) —
-          # e não apenas uma regra fixa.
-          CHECKS=$(find .policy-as-code/checkov -name checks.txt -exec cat {} + \
-                    | grep -vE '^\s*#' | grep -vE '^\s*$' | sort -u | paste -sd, -)
+          set -euo pipefail
+          POL=.policy-as-code/checkov
 
+          # 1) INCLUDE: sempre as regras curadas (checks.txt de cada épico) —
+          #    inclui built-in + custom (ex.: CKV2_PAC_1). Se use_full_catalog=true,
+          #    soma também o catálogo completo (catalog.txt de cada épico).
+          INCLUDE_FILES=$(find "$POL" -name checks.txt)
+          if [ "${USE_FULL_CATALOG}" = "true" ]; then
+            echo "Modo: CATÁLOGO COMPLETO (checks.txt + catalog.txt)"
+            INCLUDE_FILES="$INCLUDE_FILES $(find "$POL" -name catalog.txt)"
+          else
+            echo "Modo: CURADO (apenas checks.txt)"
+          fi
+
+          strip() { grep -hvE '^[[:space:]]*#|^[[:space:]]*$' "$@" 2>/dev/null | sed 's/[[:space:]].*$//' | sort -u; }
+
+          INCLUDE=$(strip $INCLUDE_FILES)
+
+          # 2) EXCLUDE: remove os IDs listados em exclusions.txt.
+          EXCLUDE=$(strip "$POL/exclusions.txt" || true)
+          if [ -n "$EXCLUDE" ]; then
+            ENFORCED=$(comm -23 <(printf '%s\n' "$INCLUDE") <(printf '%s\n' "$EXCLUDE"))
+          else
+            ENFORCED="$INCLUDE"
+          fi
+
+          CHECKS=$(printf '%s\n' "$ENFORCED" | grep -vE '^\s*$' | paste -sd, -)
           if [ -z "$CHECKS" ]; then
-            echo "::error::Nenhum check encontrado nos checks.txt dos épicos."
+            echo "::error::Conjunto de checks vazio após include/exclude."
             exit 1
           fi
 
-          echo "Checks aplicados (agregados dos épicos):"
-          echo "$CHECKS" | tr ',' '\n' | sed 's/^/  - /'
+          # 3) SKIP-PATHS: monta --skip-path para cada padrão em skip-paths.txt.
+          SKIP_ARGS=()
+          while IFS= read -r p; do
+            [ -n "$p" ] && SKIP_ARGS+=(--skip-path "$p")
+          done < <(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$POL/skip-paths.txt" 2>/dev/null || true)
+
+          echo "Checks aplicados: $(printf '%s\n' "$ENFORCED" | grep -cvE '^\s*$') | Excluídos: $(printf '%s\n' "$EXCLUDE" | grep -cvE '^\s*$' || echo 0) | Skip-paths: ${#SKIP_ARGS[@]}"
+          printf '%s\n' "$ENFORCED" | sed 's/^/  - /'
 
           checkov -d "${{ inputs.terraform_dir }}" \
-            --external-checks-dir .policy-as-code/checkov \
+            --external-checks-dir "$POL" \
             --check "$CHECKS" \
+            "${SKIP_ARGS[@]}" \
             --compact
 
       - name: Install cfn-guard

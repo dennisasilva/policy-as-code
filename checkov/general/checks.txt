@@ -1,0 +1,2 @@
+# Épico: General (catch-all) — nenhuma regra aplicada por padrão.
+# Promova IDs do catalog.txt deste diretório (ou mova para outro épico) quando triados.

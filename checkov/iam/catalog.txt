@@ -1,0 +1,41 @@
+# Épico: iam — CATÁLOGO de checks built-in do Checkov (AWS/Terraform).
+# Gerado por scripts/generate-catalog.sh (a partir de 'checkov --list').
+# Referência do que EXISTE por épico. A lista APLICADA pelo gate é checks.txt.
+# Para exigir uma regra: mova/adicione o ID em checks.txt (ou use modo catálogo).
+CKV_AWS_1
+CKV_AWS_10
+CKV_AWS_107
+CKV_AWS_108
+CKV_AWS_109
+CKV_AWS_11
+CKV_AWS_110
+CKV_AWS_111
+CKV_AWS_12
+CKV_AWS_13
+CKV_AWS_14
+CKV_AWS_15
+CKV_AWS_161
+CKV_AWS_162
+CKV_AWS_273
+CKV_AWS_274
+CKV_AWS_275
+CKV_AWS_283
+CKV_AWS_286
+CKV_AWS_287
+CKV_AWS_288
+CKV_AWS_289
+CKV_AWS_290
+CKV_AWS_348
+CKV_AWS_355
+CKV_AWS_356
+CKV_AWS_358
+CKV_AWS_359
+CKV_AWS_366
+CKV_AWS_40
+CKV_AWS_41
+CKV_AWS_49
+CKV_AWS_60
+CKV_AWS_61
+CKV_AWS_62
+CKV_AWS_63
+CKV_AWS_9

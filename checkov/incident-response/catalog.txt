@@ -1,0 +1,21 @@
+# Épico: incident-response — CATÁLOGO de checks built-in do Checkov (AWS/Terraform).
+# Gerado por scripts/generate-catalog.sh (a partir de 'checkov --list').
+# Referência do que EXISTE por épico. A lista APLICADA pelo gate é checks.txt.
+# Para exigir uma regra: mova/adicione o ID em checks.txt (ou use modo catálogo).
+CKV_AWS_124
+CKV_AWS_133
+CKV_AWS_134
+CKV_AWS_165
+CKV_AWS_166
+CKV_AWS_168
+CKV_AWS_169
+CKV_AWS_245
+CKV_AWS_26
+CKV_AWS_27
+CKV_AWS_28
+CKV_AWS_319
+CKV_AWS_360
+CKV_AWS_361
+CKV_AWS_385
+CKV_AWS_387
+CKV_AWS_72

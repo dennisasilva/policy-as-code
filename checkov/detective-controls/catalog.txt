@@ -1,0 +1,16 @@
+# Épico: detective-controls — CATÁLOGO de checks built-in do Checkov (AWS/Terraform).
+# Gerado por scripts/generate-catalog.sh (a partir de 'checkov --list').
+# Referência do que EXISTE por épico. A lista APLICADA pelo gate é checks.txt.
+# Para exigir uma regra: mova/adicione o ID em checks.txt (ou use modo catálogo).
+CKV_AWS_121
+CKV_AWS_158
+CKV_AWS_238
+CKV_AWS_251
+CKV_AWS_252
+CKV_AWS_294
+CKV_AWS_338
+CKV_AWS_35
+CKV_AWS_36
+CKV_AWS_66
+CKV_AWS_67
+CKV_AWS_75

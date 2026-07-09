@@ -1,0 +1,55 @@
+# Épico: general — CATÁLOGO de checks built-in do Checkov (AWS/Terraform).
+# Gerado por scripts/generate-catalog.sh (a partir de 'checkov --list').
+# Referência do que EXISTE por épico. A lista APLICADA pelo gate é checks.txt.
+# Para exigir uma regra: mova/adicione o ID em checks.txt (ou use modo catálogo).
+CKV_AWS_114
+CKV_AWS_122
+CKV_AWS_153
+CKV_AWS_163
+CKV_AWS_193
+CKV_AWS_194
+CKV_AWS_195
+CKV_AWS_197
+CKV_AWS_198
+CKV_AWS_205
+CKV_AWS_207
+CKV_AWS_208
+CKV_AWS_210
+CKV_AWS_213
+CKV_AWS_222
+CKV_AWS_236
+CKV_AWS_242
+CKV_AWS_243
+CKV_AWS_244
+CKV_AWS_257
+CKV_AWS_263
+CKV_AWS_264
+CKV_AWS_265
+CKV_AWS_266
+CKV_AWS_269
+CKV_AWS_270
+CKV_AWS_284
+CKV_AWS_285
+CKV_AWS_291
+CKV_AWS_295
+CKV_AWS_306
+CKV_AWS_307
+CKV_AWS_312
+CKV_AWS_314
+CKV_AWS_315
+CKV_AWS_316
+CKV_AWS_340
+CKV_AWS_341
+CKV_AWS_357
+CKV_AWS_370
+CKV_AWS_371
+CKV_AWS_377
+CKV_AWS_380
+CKV_AWS_381
+CKV_AWS_383
+CKV_AWS_386
+CKV_AWS_46
+CKV_AWS_48
+CKV_AWS_51
+CKV_AWS_79
+CKV_AWS_80

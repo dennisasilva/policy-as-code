@@ -1,0 +1,16 @@
+# =============================================================================
+# SKIP PATHS — caminhos/dirs que o Checkov deve IGNORAR no scan.
+# =============================================================================
+# Cada linha vira um "--skip-path <regex>" no comando do Checkov.
+# Útil para excluir exemplos, módulos de terceiros/vendored, fixtures de teste,
+# ou diretórios legados que ainda não serão gate-ados.
+#
+# Formato: um padrão (regex de caminho) por linha. Linhas com # e vazias ignoradas.
+#
+# Exemplos (comentados — descomente/edite conforme seu repo consumidor):
+# .*/examples/.*
+# .*/test/.*
+# .*/\.terraform/.*
+# modules/vendor/.*
+#
+# (Vazio por padrão = nenhum caminho excluído.)

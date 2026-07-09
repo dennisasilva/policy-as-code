@@ -1,0 +1,14 @@
+# =============================================================================
+# EXCLUSION LIST — check IDs que o gate deve IGNORAR (globalmente).
+# =============================================================================
+# Estes IDs são SUBTRAÍDOS do conjunto aplicado (checks.txt e/ou catalog.txt).
+# Use para desligar temporariamente uma regra ruidosa/inaplicável em toda a org,
+# SEMPRE com justificativa e, de preferência, data de revisão.
+#
+# Formato: um ID por linha. Linhas com # e vazias são ignoradas.
+#
+# Exemplos (comentados — descomente para ativar):
+# CKV_AWS_23   # SG description: ruidoso no início da adoção — revisar em 2026-Q4
+# CKV_AWS_126  # detailed monitoring EC2: custo; não obrigatório neste ambiente
+#
+# (Vazio por padrão = nenhuma exclusão.)
