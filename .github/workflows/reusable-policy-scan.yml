@@ -48,10 +48,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do repositório consumidor
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout das políticas (repo central)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.policy_repo }}
           ref: ${{ inputs.policy_ref }}
@@ -60,7 +60,7 @@ jobs:
           # nao tem acesso: passe um PAT/GitHub App em secrets.policy_repo_token.
           token: ${{ secrets.policy_repo_token || github.token }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
