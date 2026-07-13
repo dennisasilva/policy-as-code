@@ -2,8 +2,3 @@
 # Inclui a regra CUSTOM CKV2_PAC_1 (S3 + KMS CMK) e 5 built-in mais usados.
 # Detalhe de cada regra: ver README.md deste diretório.
 CKV2_PAC_1
-CKV_AWS_16
-CKV_AWS_17
-CKV_AWS_149
-CKV_AWS_189
-CKV_AWS_33
